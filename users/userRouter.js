@@ -3,7 +3,18 @@ const Users = require('./userDb.js');
 const router = express.Router();
 const Post = require('../posts/postDb.js')
 
-router.post('/:id/posts', validateUserId, (req, res) => {
+router.post('/', validateUser, (req, res) => {
+  // do your magic!
+  Users.insert(req.body)
+  .then(users => { 
+    res.status(200).json(users);
+  })
+  .catch(err => { 
+    res.status(500).json({message: "error in post a new user request"})
+  })
+});
+
+router.post('/:id/posts', validateUserId, validatePost, (req, res) => {
   // do your magic!
     const Info = {...req.body, user_id: req.params.id}
     // req.body.name = {postedBy: }
@@ -20,7 +31,7 @@ router.post('/:id/posts', validateUserId, (req, res) => {
 
 });
 
-router.get('/', (req, res) => {
+router.get('/',  (req, res) => {
   // do your magic!
   Users.get(req.query)
   .then(users => { 
@@ -98,10 +109,24 @@ function validateUserId(req, res, next) {
 
 function validateUser(req, res, next) {
   // do your magic!
+  if(!req.body){
+    res.status(400).json({message: "missing user data"})
+  }else if(!req.body.name){
+    res.status(400).json({message: "missing required name field"})
+  }else{
+    next();
+  }
 }
 
 function validatePost(req, res, next) {
   // do your magic!
+  if(!req.body){
+    res.status(400).json({message: 'missing post data'})
+  }else if(!req.body.text){
+    res.status(400).json({message: "missing required text field"})
+  }else{
+    next();
+  }
 }
 
 module.exports = router;
