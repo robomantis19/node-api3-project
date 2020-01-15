@@ -1,12 +1,14 @@
 const express = require('express');
 const Users = require('./userDb.js'); 
 const router = express.Router();
+const Post = require('../posts/postDb.js')
 
-
-router.post('/:id/posts', (req, res) => {
+router.post('/:id/posts', validateUserId, (req, res) => {
   // do your magic!
-    const Info = {...req.body, id: req.params.id}
-    Users.insert(Info)
+    const Info = {...req.body, user_id: req.params.id}
+    // req.body.name = {postedBy: }
+
+    Post.insert(Info)
     .then(users2 => { 
       res.status(200).json(users2);
 
@@ -29,7 +31,7 @@ router.get('/', (req, res) => {
   })
 });
 
-router.get('/:id', (req, res) => {
+router.get('/:id', validateUserId,(req, res) => {
   // do your magic!
   Users.getById(req.params.id)
   .then(users => { 
@@ -40,7 +42,7 @@ router.get('/:id', (req, res) => {
   })
 });
 
-router.get('/:id/posts', (req, res) => {
+router.get('/:id/posts', validateUserId, (req, res) => {
   // do your magic!
   Users.getUserPosts(req.params.id)
   .then(users => { 
@@ -54,16 +56,44 @@ router.get('/:id/posts', (req, res) => {
 
 router.delete('/:id', (req, res) => {
   // do your magic!
+  Users.remove(req.params.id)
+  .then(users => { 
+    res.status(200).json(users);
+  })
+  .catch(users => { 
+    res.status(500).json({message: "error deleteing user"})
+  })
 });
 
 router.put('/:id', (req, res) => {
   // do your magic!
+  Users.update(req.params.id, req.body)
+  .then(users => { 
+    res.status(200).json(users)
+  })
+  .catch(users => { 
+    res.status(500).json({message: "error updating database"})
+  })
 });
 
 //custom middleware
 
 function validateUserId(req, res, next) {
   // do your magic!
+  //console.log('validateUserId', req.params.id)
+  Users.getById(req.params.id)
+  .then(user => { 
+    //console.log(user, 'user')
+    if(user){
+      req.user = req.params.id
+      next();
+    }else{
+      res.status(400).json({message: "invalid user id"})
+    }
+  })
+  .catch(err => { 
+    console.log('validateUserId', err)
+  })
 }
 
 function validateUser(req, res, next) {
